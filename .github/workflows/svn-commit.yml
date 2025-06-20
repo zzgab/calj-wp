@@ -12,9 +12,16 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: install svn
+        run: sudo apt-get install -y subversion
+
       - name: svn pull
         run: |
-          sudo apt-get install -y subversion
           mkdir svn
           cd svn
           svn co http://plugins.svn.wordpress.org/calj/
+
+      - name: copy files
+        run: |
+          cp assets/* svn/calj/assets/
+          cp src/* svn/calj/trunk/
