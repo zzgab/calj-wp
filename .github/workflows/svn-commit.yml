@@ -29,4 +29,6 @@ jobs:
       - name: svn commit
         run: |
           cd svn/calj
-          svn --non-interactive --trust-server-cert --username ${{ secrets.SVN_USERNAME }} --password ${{ secrets.SVN_PASSWORD }} commit -m "$(head -c 7 <<<'${{ github.sha }}') ${{ github.event.head_commit.message }}"
+          sha="$(head -c 7 <<<'${{ github.sha }}')"
+          message="${{ github.event.head_commit.message }}"
+          svn --non-interactive --trust-server-cert --username ${{ secrets.SVN_USERNAME }} --password '${{ secrets.SVN_PASSWORD }}' commit -m "$sha $message" 
