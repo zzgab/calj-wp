@@ -19,9 +19,14 @@ jobs:
         run: |
           mkdir svn
           cd svn
-          svn co http://plugins.svn.wordpress.org/calj/
+          svn checkout http://plugins.svn.wordpress.org/calj/
 
       - name: copy files
         run: |
           cp assets/* svn/calj/assets/
           cp src/* svn/calj/trunk/
+
+      - name: svn commit
+        run: |
+          cd svn/calj
+          svn --non-interactive --trust-server-cert --username ${{ secrets.SVN_USERNAME }} --password ${{ secrets.SVN_PASSWORD }} commit -m "$(head -c 7 <<<'${{ github.sha }}') ${{ github.event.head_commit.message }}"
