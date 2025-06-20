@@ -1,6 +1,6 @@
 === CalJ ===
 Contributors: calj
-Donate link: https://www.calj.net/
+Donate link: https://www.calj.net/paypal
 Tags: calendar, date, events, hebrew, jewish, shortcode
 Requires at least: 4.9
 Tested up to: 6.6.2
