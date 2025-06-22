@@ -14,4 +14,6 @@ namespace calj\wordpress;
 require_once __DIR__.'/CalJPlugin.php';
 require_once __DIR__.'/CalJSettingsPage.php';
 
-is_admin() ? new CalJSettingsPage() : new CalJPlugin();
+/** @var WPModule $module */
+$module = is_admin() ? new CalJSettingsPage() : new CalJPlugin();
+$module->init();

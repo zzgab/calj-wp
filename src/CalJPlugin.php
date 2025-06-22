@@ -1,14 +1,15 @@
 <?php
 namespace calj\wordpress;
+require_once __DIR__.'/WPModule.php';
 
-class CalJPlugin
+class CalJPlugin implements WPModule
 {
 	const SHABBAT_CACHE_OPTION = 'calj_shabbat_cache';
 	const CALJ_API_OPTION = 'calj_api';
 
 	private static $shabbatCache = null;
 
-	public function __construct() {
+	public function init() {
 		add_shortcode( 'caljshabbat', array( $this, 'shortcode' ) );
 	}
 
@@ -35,39 +36,8 @@ class CalJPlugin
                 throw new \Exception('Missing "val" attribute.', 2);
             }
 
+            $json = $this->prepareCachedData();
             $result = '';
-
-            $cache = $this->unserializeShabbatCache();
-            if ( (0 == count($cache)) || ! is_array($cache) ) {
-                $cache = $this->refreshCache();
-            }
-
-            if ((! $cache) || (0 == count($cache)) || ! is_array($cache)) {
-                throw new \Exception('Invalid data in cache, even after refresh.', 3);
-            }
-
-            // Check if cache is fresh enough
-            $coordKey = $this->buildCacheKeyForCurrentSettings();
-
-            if (array_key_exists($coordKey, $cache)) {
-                $coordCache = $cache[$coordKey];
-                $expires = $coordCache['expires'];
-                $dtNow = new \DateTime('now', new \DateTimeZone('UTC'));
-                if ($dtNow->format('U') > $expires) {
-                    $cache = $this->refreshCache($coordKey);
-                }
-            }
-            else {
-                $cache = $this->refreshCache();
-            }
-
-            if (! array_key_exists($coordKey, $cache)) {
-            }
-            else {
-                $coordCache = $cache[$coordKey];
-            }
-
-            $json = $coordCache;
 
             if (isset($json['success']) && $json['success']) {
 
@@ -118,16 +88,14 @@ class CalJPlugin
                     if (array_key_exists($dow, $jsonCursor)) {
                         $result = $jsonCursor[$dow];
                     }
-                    else {
-                        $result = '';
-                    }
                 }
                 else {
                     $result = $jsonCursor;
                 }
             }
             return $result;
-        } catch (\Exception $e) {
+        }
+        catch (\Exception $e) {
             return '[ERR:' . $e->getCode() . ':' . $e->getMessage() . ']';
         }
 	}
@@ -142,16 +110,17 @@ class CalJPlugin
         $city =  self::getoptopt('city', '');
         // Fixed by idokd ( ido@yalla-ya.com ): instead of file_get_contents
         $url = 'https://api.calj.net/wp/1/shabbat.json?city='.$city.'&key='.$key;
-        $response = wp_remote_get( $url );
-        $response = wp_remote_retrieve_body( $response );
+        $response = json_decode(
+            wp_remote_retrieve_body( wp_remote_get( $url ) ),
+            true
+        );
 
-        $response = json_decode($response, true);
         if ( (! $response) || (! isset($response['data'])) || (! $response['data']) ) {
             throw new \Exception('API call returned no data.', 5);
         }
 
-        $response = json_decode( self::xorString($response['data']), true );
-        if ( ! $response ) {
+        $decoded = json_decode( self::xorString($response['data']), true );
+        if ( ! $decoded ) {
             throw new \Exception('Failed to decrypt the response.', 6);
         }
 
@@ -160,7 +129,7 @@ class CalJPlugin
             $coordKey = $this->buildCacheKeyForCurrentSettings();
         }
 
-        $cache[$coordKey] = $response;
+        $cache[$coordKey] = $decoded;
 
         $this->serializeShabbatCache($cache);
 
@@ -196,7 +165,7 @@ class CalJPlugin
 			for($j = 0; ($j < strlen($key) && $i < strlen($text)); $j++, $i++)
 				$outText .= substr($text, $i, 1) ^ substr($key, $j, 1);
 
-		return $outText;
+        return $outText;
 	}
 
     private static function getoptopt($optName, $default) {
@@ -205,6 +174,42 @@ class CalJPlugin
             return $default;
         }
         return $options[$optName];
+    }
+
+    /**
+     * @return mixed
+     * @throws \Exception
+     */
+    private function prepareCachedData()
+    {
+        $cache = $this->unserializeShabbatCache();
+        if ((0 == count($cache)) || !is_array($cache)) {
+            $cache = $this->refreshCache();
+        }
+
+        if ((!$cache) || (0 == count($cache)) || !is_array($cache)) {
+            throw new \Exception('Invalid data in cache, even after refresh.', 3);
+        }
+
+        // Check if cache is fresh enough
+        $coordKey = $this->buildCacheKeyForCurrentSettings();
+
+        if (array_key_exists($coordKey, $cache)) {
+            $coordCache = $cache[$coordKey];
+            $expires = $coordCache['expires'];
+            $dtNow = new \DateTime('now', new \DateTimeZone('UTC'));
+            if ($dtNow->format('U') > $expires) {
+                $cache = $this->refreshCache($coordKey);
+            }
+        } else {
+            $cache = $this->refreshCache();
+        }
+
+        if (array_key_exists($coordKey, $cache)) {
+            $coordCache = $cache[$coordKey];
+        }
+
+        return $coordCache;
     }
 }
 
