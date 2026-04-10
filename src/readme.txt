@@ -3,7 +3,7 @@ Contributors: calj
 Donate link: https://www.calj.net/paypal
 Tags: calendar, date, events, hebrew, jewish, shortcode
 Requires at least: 4.9
-Tested up to: 6.6.2
+Tested up to: 6.9.4
 Requires PHP: 5.6
 Stable tag: trunk
 License: GPLv2 or later
