@@ -1,6 +1,10 @@
 <?php
 namespace calj\wordpress;
 
+require_once __DIR__.'/Locales.php';
+
+use calj\wordpress\Locales;
+
 class CalJPlugin
 {
 	const SHABBAT_CACHE_OPTION = 'calj_shabbat_cache';
@@ -89,28 +93,7 @@ class CalJPlugin
 
                 // dot notation to access the json properties
                 $jsonPath = preg_split('#\.#', $decodedAttr['val']);
-                $jsonCursor = $json;
-                for($i = 0; $i < count($jsonPath); ++ $i) {
-                    $component = $jsonPath[$i];
-
-                    // If the component name exists with a 'Loc' suffix,
-                    // treat it as an array of language codes
-                    if ($lang &&
-                        array_key_exists($component.'Loc', $jsonCursor) &&
-                        is_array($jsonCursor[$component.'Loc']) &&
-                        array_key_exists($lang, $jsonCursor[$component.'Loc'])
-                    ) {
-                        $jsonCursor = $jsonCursor[$component.'Loc'][$lang];
-                    }
-
-                    else if (array_key_exists($component, $jsonCursor)) {
-                        $jsonCursor = $jsonCursor[$component];
-                    }
-                    else {
-                        $jsonCursor = '';
-                        break;
-                    }
-                }
+                $jsonCursor = $this->computeJsonPath($lang, $json, $jsonPath);
 
                 if (is_array($jsonCursor)) {
                     // If we get an array in response, it means that there are 7 items (1 per day of the week, starting Sun)
@@ -132,7 +115,55 @@ class CalJPlugin
         }
 	}
 
-	private function refreshCache($coordKey = null)
+    private function computeJsonPath($lang, $json, $jsonPath)
+    {
+        $jsonCursor = $json;
+        for($i = 0; $i < count($jsonPath); ++ $i) {
+            $component = $jsonPath[$i];
+
+            if ($lang && 
+                (($component === 'monthName') || ($component === 'fridayMonthName')) &&
+                array_key_exists($lang, Locales::$locales) &&
+                array_key_exists('monthName', Locales::$locales[$lang]))
+            {
+                $month = $this->computeJsonPath($lang, $json, $component === 'monthName' ? 'month' : 'fridayMonth');
+                $jsonCursor = Locales::$locales[$lang]['monthName'][$month];
+            }
+
+
+            else if ($lang && 
+                ($component === 'jmonthName') &&
+                array_key_exists($lang, Locales::$locales) &&
+                array_key_exists('jmonthName', Locales::$locales[$lang]))
+            {
+                $month = $this->computeJsonPath($lang, $json, 'jmonth');
+                $jsonCursor = Locales::$locales[$lang]['jmonthName'][$month];
+            }
+
+
+            // If the component name exists with a 'Loc' suffix,
+            // treat it as an array of language codes
+            else if ($lang &&
+                array_key_exists($component.'Loc', $jsonCursor) &&
+                is_array($jsonCursor[$component.'Loc']) &&
+                array_key_exists($lang, $jsonCursor[$component.'Loc'])
+            ) {
+                $jsonCursor = $jsonCursor[$component.'Loc'][$lang];
+            }
+
+            else if (array_key_exists($component, $jsonCursor)) {
+                $jsonCursor = $jsonCursor[$component];
+            }
+            else {
+                $jsonCursor = '';
+                break;
+            }
+        }
+
+        return $jsonCursor;
+    }
+
+    private function refreshCache($coordKey = null)
 	{
         $key = self::getoptopt('api_key', '');
         if (!$key) {

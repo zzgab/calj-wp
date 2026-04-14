@@ -5,7 +5,7 @@ namespace calj\wordpress;
  * Plugin Name: CalJ
  * Plugin URI: https://calj.net
  * Description: Add the Shabbat times on your site.
- * Version: 1.5
+ * Version: 2.0
  * Author: Gabriel Zerbib <gabriel@calj.net>
  * Author URI: https://calj.net
  * Licence: GPL3
