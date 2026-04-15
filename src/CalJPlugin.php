@@ -1,8 +1,6 @@
 <?php
 namespace calj\wordpress;
 
-require __DIR__ . '/../vendor/autoload.php';
-
 class CalJPlugin
 {
 	const SHABBAT_CACHE_OPTION = 'calj_shabbat_cache';

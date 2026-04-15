@@ -1,8 +1,6 @@
 <?php
 namespace calj\wordpress;
 
-require __DIR__ . '/../vendor/autoload.php';
-
 use calj\wordpress\CalJPlugin;
 
 class CalJSettingsPage
