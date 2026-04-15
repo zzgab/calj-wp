@@ -24,7 +24,7 @@ jobs:
       - name: copy files
         run: |
           cp assets/* svn/calj/assets/
-          cp src/* svn/calj/trunk/
+          cp -r src/* svn/calj/trunk/
 
       - name: composer
         uses: php-actions/composer@v6
