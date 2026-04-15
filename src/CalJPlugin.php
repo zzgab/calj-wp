@@ -1,9 +1,7 @@
 <?php
 namespace calj\wordpress;
 
-require_once __DIR__.'/Locales.php';
-
-use calj\wordpress\Locales;
+require __DIR__ . '/../vendor/autoload.php';
 
 class CalJPlugin
 {
@@ -115,6 +113,20 @@ class CalJPlugin
         }
 	}
 
+    private function getLocaleStrings($lang): array
+    {
+        $localeClass = "calj\\wordpress\\locales\\$lang";
+        try {
+            $locale = new $localeClass();
+            return $locale->strings;
+        } catch  (\Exception $e) {
+            if ($lang !== 'en') {
+                return $this->getLocaleStrings('en');
+            }
+            throw $e;
+        }
+    }
+
     private function computeJsonPath($lang, $json, $jsonPath)
     {
         $jsonCursor = $json;
@@ -122,22 +134,19 @@ class CalJPlugin
             $component = $jsonPath[$i];
 
             if ($lang && 
-                (($component === 'monthName') || ($component === 'fridayMonthName')) &&
-                array_key_exists($lang, Locales::$locales) &&
-                array_key_exists('monthName', Locales::$locales[$lang]))
+                (($component === 'monthName') || ($component === 'fridayMonthName')) )
             {
                 $month = $this->computeJsonPath($lang, $json, $component === 'monthName' ? 'month' : 'fridayMonth');
-                $jsonCursor = Locales::$locales[$lang]['monthName'][$month];
+                $locale = $this->getLocaleStrings($lang);
+                $jsonCursor = $locale['monthName'][$month];
             }
 
-
             else if ($lang && 
-                ($component === 'jmonthName') &&
-                array_key_exists($lang, Locales::$locales) &&
-                array_key_exists('jmonthName', Locales::$locales[$lang]))
+                ($component === 'jmonthName') )
             {
                 $month = $this->computeJsonPath($lang, $json, 'jmonth');
-                $jsonCursor = Locales::$locales[$lang]['jmonthName'][$month];
+                $locale = $this->getLocaleStrings($lang);
+                $jsonCursor = $locale['jmonthName'][$month];
             }
 
 

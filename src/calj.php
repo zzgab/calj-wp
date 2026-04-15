@@ -1,5 +1,8 @@
 <?php
-namespace calj\wordpress;
+require __DIR__ . '/../vendor/autoload.php';
+
+use calj\wordpress\CalJSettingsPage;
+use calj\wordpress\CalJPlugin;
 
 /**
  * Plugin Name: CalJ
@@ -10,8 +13,5 @@ namespace calj\wordpress;
  * Author URI: https://calj.net
  * Licence: GPL3
  */
-
-require_once __DIR__.'/CalJPlugin.php';
-require_once __DIR__.'/CalJSettingsPage.php';
 
 is_admin() ? new CalJSettingsPage() : new CalJPlugin();
