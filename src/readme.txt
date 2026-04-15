@@ -16,6 +16,8 @@ Display the Shabbat times (zmanim) for the city of your choice.
 Use the popular CalJ API to display the begin and end times of Shabbat as well as the name of the week's Parasha on your blog,
 with the help of a simple *shortcode*
 
+Project: https://github.com/zzgab/calj-wp
+
 == Installation ==
 
 1. Upload the plugin files to the `/wp-content/plugins/calj` directory, or install the plugin through the WordPress plugins screen directly.
