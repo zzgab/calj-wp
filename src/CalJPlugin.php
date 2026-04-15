@@ -179,7 +179,7 @@ class CalJPlugin
 
         $city =  self::getoptopt('city', '');
         // Fixed by idokd ( ido@yalla-ya.com ): instead of file_get_contents
-        $url = 'https://api.calj.net/wp/1/shabbat.json?city='.$city.'&key='.$key;
+        $url = 'https://api.calj.net/wp/2/shabbat.json?city='.$city.'&key='.$key;
         $response = wp_remote_get( $url );
         $response = wp_remote_retrieve_body( $response );
 
