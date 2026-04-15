@@ -125,7 +125,7 @@ class CalJPlugin
         }
     }
 
-    private function computeJsonPath($lang, $json, $jsonPath)
+    private function computeJsonPath($lang, $json, array $jsonPath)
     {
         $jsonCursor = $json;
         for($i = 0; $i < count($jsonPath); ++ $i) {
@@ -134,7 +134,7 @@ class CalJPlugin
             if ($lang && 
                 (($component === 'monthName') || ($component === 'fridayMonthName')) )
             {
-                $month = $this->computeJsonPath($lang, $json, $component === 'monthName' ? 'month' : 'fridayMonth');
+                $month = $this->computeJsonPath($lang, $jsonCursor, [$component === 'monthName' ? 'month' : 'fridayMonth']);
                 $locale = $this->getLocaleStrings($lang);
                 $jsonCursor = $locale['monthName'][$month];
             }
@@ -142,7 +142,7 @@ class CalJPlugin
             else if ($lang && 
                 ($component === 'jmonthName') )
             {
-                $month = $this->computeJsonPath($lang, $json, 'jmonth');
+                $month = $this->computeJsonPath($lang, $jsonCursor, ['jmonth']);
                 $locale = $this->getLocaleStrings($lang);
                 $jsonCursor = $locale['jmonthName'][$month];
             }

@@ -10,7 +10,7 @@ class ru extends Locale
     }
 
     public $strings = [
-    'jmonthName' = [
+    'jmonthName' => [
         1 => 'Ниссан',
         2 => 'Ияр',
         3 => 'Сиван',

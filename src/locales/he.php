@@ -10,7 +10,7 @@ class he extends Locale
     }
 
   public $strings = [
-    'jmonthName' = [
+    'jmonthName' => [
         1 => 'ניסן',
         2 => 'אייר',
         3 => 'סיון',
