@@ -20,11 +20,16 @@ jobs:
           mkdir svn
           cd svn
           svn checkout http://plugins.svn.wordpress.org/calj/
-
+        
       - name: copy files
         run: |
           cp assets/* svn/calj/assets/
           cp src/* svn/calj/trunk/
+
+      - name: composer
+        uses: php-actions/composer@v6
+        with:
+          working_dir: "svn/calj/trunk"
 
       - name: svn commit
         run: |
