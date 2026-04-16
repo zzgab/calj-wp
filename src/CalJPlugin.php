@@ -114,15 +114,11 @@ class CalJPlugin
     private function getLocaleStrings($lang): array
     {
         $localeClass = "calj\\wordpress\\locales\\$lang";
-        try {
-            $locale = new $localeClass();
-            return $locale->strings;
-        } catch  (\Exception $e) {
-            if ($lang !== 'en') {
-                return $this->getLocaleStrings('en');
-            }
-            throw $e;
-        }
+        if (!class_exists($localeClass))
+            return $this->getLocaleStrings('en');
+
+        $locale = new $localeClass();
+        return $locale->strings;
     }
 
     private function computeJsonPath($lang, $json, array $jsonPath)
@@ -139,23 +135,17 @@ class CalJPlugin
                 $jsonCursor = $locale['monthName'][$month];
             }
 
-            else if ($lang && 
-                ($component === 'jmonthName') )
+            else if ($lang && ($component === 'jmonthName') )
             {
                 $month = $this->computeJsonPath($lang, $jsonCursor, ['jmonth']);
                 $locale = $this->getLocaleStrings($lang);
                 $jsonCursor = $locale['jmonthName'][$month];
             }
 
-
-            // If the component name exists with a 'Loc' suffix,
-            // treat it as an array of language codes
-            else if ($lang &&
-                array_key_exists($component.'Loc', $jsonCursor) &&
-                is_array($jsonCursor[$component.'Loc']) &&
-                array_key_exists($lang, $jsonCursor[$component.'Loc'])
-            ) {
-                $jsonCursor = $jsonCursor[$component.'Loc'][$lang];
+            else if ($lang && ($component === 'parasha') )
+            {
+              $parashaRaw = $this->computeJsonPath($lang, $jsonCursor, ['parashaRaw']);
+              $jsonCursor = $this->makeParashaName($lang, $parashaRaw);
             }
 
             else if (array_key_exists($component, $jsonCursor)) {
@@ -168,6 +158,26 @@ class CalJPlugin
         }
 
         return $jsonCursor;
+    }
+
+    private function makeParashaName($lang, $parashaRaw)
+    {
+        $locale = $this->getLocaleStrings($lang);
+        if (!array_key_exists('parasha', $locale)) {
+            $locale = $this->getLocaleStrings('en');
+        }
+
+        $parshiot = $locale['parasha'];
+
+        $weekArray = $parashaRaw['weekly'] ?? [];
+        if (count($weekArray) === 1) {
+            return $parshiot[$weekArray[0]];
+        }
+        if (count($weekArray) === 2) {
+            return "{$parshiot[$weekArray[0]]} - {$parshiot[$weekArray[1]]}";
+        }
+
+        return '';
     }
 
     private function refreshCache($coordKey = null)
