@@ -72,7 +72,7 @@ class CalJPlugin
             if (isset($json['success']) && $json['success']) {
 
                 $city = $decodedAttr['city'];
-                $lang = $decodedAttr['lang'];
+                $lang = $decodedAttr['lang'] ?: $json['lang']['foo'] ?? 'en';
 
                 // If we're demanding city-related data,
                 // use the corresponding sub-part of the dictionary
@@ -255,4 +255,3 @@ class CalJPlugin
         return $options[$optName];
     }
 }
-
