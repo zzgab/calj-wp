@@ -88,7 +88,7 @@ class CalJSettingsPage
 	{
 		// Set class property
 		$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
-		$requestUri = wp_unslash($_SERVER['REQUEST_URI'] ?? '')
+		$requestUri = wp_unslash($_SERVER['REQUEST_URI'] ?? '');
 		?>
 		<div class="wrap">
 			<h2>CalJ Settings
