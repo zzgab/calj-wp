@@ -1,5 +1,6 @@
 <?php
 namespace calj\wordpress;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 use calj\wordpress\CalJPlugin;
 
@@ -80,7 +81,7 @@ class CalJSettingsPage
 		?>
 		<div class="wrap">
 			<h2>CalJ Settings
-				<a class="button-calj-clear-chache-now page-title-action" href="<?php echo $_SERVER['REQUEST_URI'];?>&clear-calj-cache=1">Clear Cache Now</a>
+				<a class="button-calj-clear-chache-now page-title-action" href="<?php echo esc_attr($_SERVER['REQUEST_URI']);?>&clear-calj-cache=1">Clear Cache Now</a>
 				<span class="calj-ok-cache-cleared" style="color: #159E15; font-size: 12px; visibility: hidden;">OK - Cache Cleared.</span>
 			</h2>
 			<form method="post" action="options.php">
@@ -104,8 +105,8 @@ class CalJSettingsPage
 		$cacheBuster = mt_rand();
 		$siteUrl = urlencode(get_option('siteurl'));
 
-		print '<a href="https://www.calj.net/api/wp-obtain.html?_='.$cacheBuster.'&hashing='.$hashing.'&siteurl='.$siteUrl.
-			'&TB_iframe=true&width=600&height=550" title="CalJ API Key" class="thickbox button button-primary button-calj-obtain-key" target="_blank">Obtain a Key</a>';
+		print '<a href="'.esc_attr('https://www.calj.net/api/wp-obtain.html?_='.$cacheBuster.'&hashing='.$hashing.'&siteurl='.$siteUrl.
+			'&TB_iframe=true&width=600&height=550" title="CalJ API Key" class="thickbox button button-primary button-calj-obtain-key').'" target="_blank">Obtain a Key</a>';
 
         print '<br>';
         print "<div>⚠️ NOTE: you must install the plugin on your target (final/production) WordPress instance (Website URL)
@@ -211,7 +212,7 @@ ENDSCRIPT;
 	public function api_key_callback()
 	{
 		printf(
-			'<input type="text" size="60" id="calj_api_key" name="'.CalJPlugin::CALJ_API_OPTION.'[api_key]" value="%s" />',
+			'<input type="text" size="60" id="calj_api_key" name="'.esc_attr(CalJPlugin::CALJ_API_OPTION.'[api_key]').'" value="%s" />',
 			isset( $this->options['api_key'] ) ? esc_attr( $this->options['api_key']) : ''
 		);
 	}
