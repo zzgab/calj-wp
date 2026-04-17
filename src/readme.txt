@@ -5,7 +5,7 @@ Tags: parasha, date, shabbat, jewish, shortcode
 Requires at least: 4.9
 Tested up to: 6.9
 Requires PHP: 7.3
-Stable tag: trunk
+Stable tag: 2.0
 License: GPL3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
 

@@ -18,6 +18,11 @@ class CalJSettingsPage
 	public function __construct()
 	{
 		if(isset($_POST['calj-clear-cache']) && $_POST['calj-clear-cache']) {
+			if (!current_user_can('manage_options')) {
+				wp_send_json_error('Unauthorized', 403);
+				exit;
+			}
+
 			ob_end_clean();
 			add_option( CalJPlugin::SHABBAT_CACHE_OPTION, array(), '', 'no');
 			update_option( CalJPlugin::SHABBAT_CACHE_OPTION, array());
@@ -26,6 +31,11 @@ class CalJSettingsPage
 		}
 
 		if(isset($_POST['calj-op']) && ($_POST['calj-op'] == 'save-obtained-key')) {
+			if (!current_user_can('manage_options')) {
+				wp_send_json_error('Unauthorized', 403);
+				exit;
+			}
+
 			$key = $_POST['calj-key'];
 			ob_end_clean();
 			$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
@@ -78,10 +88,11 @@ class CalJSettingsPage
 	{
 		// Set class property
 		$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
+		$requestUri = wp_unslash($_SERVER['REQUEST_URI'] ?? '')
 		?>
 		<div class="wrap">
 			<h2>CalJ Settings
-				<a class="button-calj-clear-chache-now page-title-action" href="<?php echo esc_attr($_SERVER['REQUEST_URI']);?>&clear-calj-cache=1">Clear Cache Now</a>
+				<a class="button-calj-clear-chache-now page-title-action" href="<?php echo esc_attr($requestUri);?>&clear-calj-cache=1">Clear Cache Now</a>
 				<span class="calj-ok-cache-cleared" style="color: #159E15; font-size: 12px; visibility: hidden;">OK - Cache Cleared.</span>
 			</h2>
 			<form method="post" action="options.php">
