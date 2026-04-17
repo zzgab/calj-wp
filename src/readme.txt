@@ -4,7 +4,7 @@ Donate link: https://www.calj.net/paypal
 Tags: calendar, date, events, hebrew, jewish, shortcode
 Requires at least: 4.9
 Tested up to: 6.9.4
-Requires PHP: 5.6
+Requires PHP: 7.3
 Stable tag: trunk
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -15,6 +15,8 @@ Display the Shabbat times (zmanim) for the city of your choice.
 
 Use the popular CalJ API to display the begin and end times of Shabbat as well as the name of the week's Parasha on your blog,
 with the help of a simple *shortcode*
+
+Project: https://github.com/zzgab/calj-wp
 
 == Installation ==
 
@@ -144,6 +146,10 @@ Check out https://www.calj.net/ for details.
 
 
 == Changelog ==
+
+= 2.0 =
+Uses newer version of the API.
+Refactored to be extensible with additional locales.
 
 = 1.5 =
 Fix by @idokd for wp_remote_get

@@ -1,6 +1,8 @@
 <?php
 namespace calj\wordpress;
 
+use calj\wordpress\CalJPlugin;
+
 class CalJSettingsPage
 {
 

@@ -1,0 +1,85 @@
+<?php
+namespace calj\wordpress\locales;
+
+use calj\wordpress\locales\Locale;
+
+class fr extends Locale
+{
+  public function __construct() {
+    parent::init('fr_FR');
+  }
+
+  public $strings = [
+    'jmonthName' => [
+        1 => 'Nissan',
+        2 => 'Iyar',
+        3 => 'Sivan',
+        4 => 'Tamuz',
+        5 => 'Av',
+        6 => 'Eloul',
+        7 => 'Tishrei',
+        8 => 'Ḥeshvan',
+        9 => 'Kislev',
+        10 => 'Tevet',
+        11 => 'Shvat',
+        12 => 'Adar',
+        13 => 'Adar Bet',
+    ],
+    'parasha' => [
+    	"Bereshit",
+        "Noaḥ",
+        "Lekh lekha",
+        "Vayera",
+        "Ḥayei Sarah",
+        "Toldot",
+        "Vayetse",
+        "Vayishlaḥ",
+        "Vayeshev",
+        "Miqetz",
+        "Vayigash",
+        "Vayeḥi",
+        "Shemot",
+        "Va'era",
+        "Bo",
+        "Beshalaḥ",
+        "Yitro",
+        "Mishpatim",
+        "Terouma",
+        "Tetsaveh",
+        "Ki tissa",
+        "Vayaq'hel",
+        "Peqoudei",
+        "Vayiqra",
+        "Tsav",
+        "Shemini",
+        "Tazria",
+        "Metsora",
+        "Aḥarei moth",
+        "Qedoshim",
+        "Emor",
+        "Behar",
+        "Beḥouqotaï",
+        "Bamidbar",
+        "Nasso",
+        "Beha'alotekha",
+        "Shelaḥ Lekha",
+        "Koraḥ",
+        "Ḥouqat",
+        "Balaq",
+        "Pinḥas",
+        "Matot",
+        "Mass'ei",
+        "Devarim",
+        "Vaetḥanan",
+        "Eqev",
+        "Re'eh",
+        "Shoftim",
+        "Ki tetse",
+        "Ki tavo",
+        "Nitsavim",
+        "Vayelekh",
+        "Ha'azinou",
+        "Vezot haberakha",
+    ],
+  ];
+}

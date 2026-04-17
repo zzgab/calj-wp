@@ -72,7 +72,7 @@ class CalJPlugin
             if (isset($json['success']) && $json['success']) {
 
                 $city = $decodedAttr['city'];
-                $lang = $decodedAttr['lang'];
+                $lang = $decodedAttr['lang'] ?: $json['lang']['foo'] ?? 'en';
 
                 // If we're demanding city-related data,
                 // use the corresponding sub-part of the dictionary
@@ -89,28 +89,7 @@ class CalJPlugin
 
                 // dot notation to access the json properties
                 $jsonPath = preg_split('#\.#', $decodedAttr['val']);
-                $jsonCursor = $json;
-                for($i = 0; $i < count($jsonPath); ++ $i) {
-                    $component = $jsonPath[$i];
-
-                    // If the component name exists with a 'Loc' suffix,
-                    // treat it as an array of language codes
-                    if ($lang &&
-                        array_key_exists($component.'Loc', $jsonCursor) &&
-                        is_array($jsonCursor[$component.'Loc']) &&
-                        array_key_exists($lang, $jsonCursor[$component.'Loc'])
-                    ) {
-                        $jsonCursor = $jsonCursor[$component.'Loc'][$lang];
-                    }
-
-                    else if (array_key_exists($component, $jsonCursor)) {
-                        $jsonCursor = $jsonCursor[$component];
-                    }
-                    else {
-                        $jsonCursor = '';
-                        break;
-                    }
-                }
+                $jsonCursor = $this->computeJsonPath($lang, $json, $jsonPath);
 
                 if (is_array($jsonCursor)) {
                     // If we get an array in response, it means that there are 7 items (1 per day of the week, starting Sun)
@@ -132,7 +111,76 @@ class CalJPlugin
         }
 	}
 
-	private function refreshCache($coordKey = null)
+    private function getLocaleStrings($lang): array
+    {
+        $localeClass = "calj\\wordpress\\locales\\$lang";
+        if (!class_exists($localeClass))
+            return $this->getLocaleStrings('en');
+
+        $locale = new $localeClass();
+        return $locale->strings;
+    }
+
+    private function computeJsonPath($lang, $json, array $jsonPath)
+    {
+        $jsonCursor = $json;
+        for($i = 0; $i < count($jsonPath); ++ $i) {
+            $component = $jsonPath[$i];
+
+            if ($lang && 
+                (($component === 'monthName') || ($component === 'fridayMonthName')) )
+            {
+                $month = $this->computeJsonPath($lang, $jsonCursor, [$component === 'monthName' ? 'month' : 'fridayMonth']);
+                $locale = $this->getLocaleStrings($lang);
+                $jsonCursor = $locale['monthName'][$month];
+            }
+
+            else if ($lang && ($component === 'jmonthName') )
+            {
+                $month = $this->computeJsonPath($lang, $jsonCursor, ['jmonth']);
+                $locale = $this->getLocaleStrings($lang);
+                $jsonCursor = $locale['jmonthName'][$month];
+            }
+
+            else if ($lang && ($component === 'parasha') )
+            {
+              $parashaRaw = $this->computeJsonPath($lang, $jsonCursor, ['parashaRaw']);
+              $jsonCursor = $this->makeParashaName($lang, $parashaRaw);
+            }
+
+            else if (array_key_exists($component, $jsonCursor)) {
+                $jsonCursor = $jsonCursor[$component];
+            }
+            else {
+                $jsonCursor = '';
+                break;
+            }
+        }
+
+        return $jsonCursor;
+    }
+
+    private function makeParashaName($lang, $parashaRaw)
+    {
+        $locale = $this->getLocaleStrings($lang);
+        if (!array_key_exists('parasha', $locale)) {
+            $locale = $this->getLocaleStrings('en');
+        }
+
+        $parshiot = $locale['parasha'];
+
+        $weekArray = $parashaRaw['weekly'] ?? [];
+        if (count($weekArray) === 1) {
+            return $parshiot[$weekArray[0]];
+        }
+        if (count($weekArray) === 2) {
+            return "{$parshiot[$weekArray[0]]} - {$parshiot[$weekArray[1]]}";
+        }
+
+        return '';
+    }
+
+    private function refreshCache($coordKey = null)
 	{
         $key = self::getoptopt('api_key', '');
         if (!$key) {
@@ -141,7 +189,7 @@ class CalJPlugin
 
         $city =  self::getoptopt('city', '');
         // Fixed by idokd ( ido@yalla-ya.com ): instead of file_get_contents
-        $url = 'https://api.calj.net/wp/1/shabbat.json?city='.$city.'&key='.$key;
+        $url = 'https://api.calj.net/wp/2/shabbat.json?city='.$city.'&key='.$key;
         $response = wp_remote_get( $url );
         $response = wp_remote_retrieve_body( $response );
 
@@ -207,4 +255,3 @@ class CalJPlugin
         return $options[$optName];
     }
 }
-
