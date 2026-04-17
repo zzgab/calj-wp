@@ -1,13 +1,13 @@
-=== CalJ ===
+=== CalJ Shabbat Times ===
 Contributors: calj
 Donate link: https://www.calj.net/paypal
-Tags: calendar, date, events, hebrew, jewish, shortcode
+Tags: parasha, date, shabbat, jewish, shortcode
 Requires at least: 4.9
-Tested up to: 6.9.4
+Tested up to: 6.9
 Requires PHP: 7.3
 Stable tag: trunk
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
+License: GPL3
+License URI: http://www.gnu.org/licenses/gpl-3.0.html
 
 Display the Shabbat times (zmanim) for the city of your choice.
 
@@ -148,6 +148,8 @@ Check out https://www.calj.net/ for details.
 == Changelog ==
 
 = 2.0 =
+Had to rename the plugin from "CalJ" to "CalJ Shabbat Times" because a 4-letter name is now forbidden by WordPress.org...
+Fixed security recommendations by WordPress.org
 Uses newer version of the API.
 Refactored to be extensible with additional locales.
 

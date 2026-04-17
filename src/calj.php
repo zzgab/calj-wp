@@ -5,13 +5,13 @@ use calj\wordpress\CalJSettingsPage;
 use calj\wordpress\CalJPlugin;
 
 /**
- * Plugin Name: CalJ
+ * Plugin Name: CalJ Shabbat Times
  * Plugin URI: https://calj.net
  * Description: Add the Shabbat times on your site.
  * Version: 2.0
  * Author: Gabriel Zerbib <gabriel@calj.net>
  * Author URI: https://calj.net
- * Licence: GPL3
+ * License: GPL3
  */
 
 is_admin() ? new CalJSettingsPage() : new CalJPlugin();

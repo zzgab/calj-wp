@@ -51,7 +51,7 @@ class CalJSettingsPage
 	public function pluginActionLinks($links, $file)
 	{
 		if (dirname(plugin_basename(__FILE__)) != dirname($file)) return $links;
-		$links[] = '<a href="options-general.php?page=calj-setting">' . __('Settings') . '</a>';
+		$links[] = '<a href="options-general.php?page=calj-setting">' . __('Settings', 'calj') . '</a>';
 		return $links;
 	}
 
