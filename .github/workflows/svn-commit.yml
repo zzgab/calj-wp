@@ -21,19 +21,20 @@ jobs:
           cd svn
           svn checkout http://plugins.svn.wordpress.org/calj/
 
-      - name: composer
-        uses: php-actions/composer@v6
-        with:
-          working_dir: "svn/calj/trunk"
-
       - name: copy files
         run: |
           cp assets/* svn/calj/assets/
           cp -r src/* svn/calj/trunk/
 
+      - name: composer
+        uses: php-actions/composer@v6
+        with:
+          working_dir: "svn/calj/trunk"
+
       - name: svn commit
         run: |
           cd svn/calj
+          svn add --force .
           sha="$(head -c 7 <<<'${{ github.sha }}')"
           message="${{ github.event.head_commit.message }}"
           svn --non-interactive --trust-server-cert --username ${{ secrets.SVN_USERNAME }} --password '${{ secrets.SVN_PASSWORD }}' commit -m "$sha $message" 
