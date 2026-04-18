@@ -30,7 +30,12 @@ class CalJSettingsPage
 			exit;
 		}
 
-		if(isset($_POST['calj-op']) && ($_POST['calj-op'] == 'save-obtained-key')) {
+		if(isset($_POST['calj-op']) && ($_POST['calj-op'] === 'save-obtained-key')) {
+			if ( ! isset( $_POST['calj-nonce'] ) || 
+				 ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['calj-nonce'])), 'save-obtained-key' ) ) {
+				wp_die( 'Security check failed' );
+			}
+		
 			if (!current_user_can('manage_options')) {
 				wp_send_json_error('Unauthorized', 403);
 				exit;
@@ -45,13 +50,6 @@ class CalJSettingsPage
 			echo json_encode(array('success' => true, 'calj-key' => $key));
 			exit;
 		}
-
-		// Register seed
-		add_option ( 'wpcjseed',
-			mt_rand(100000, 999999).'-'.mt_rand(100000, 999999).'-'.mt_rand(100000, 999999).
-			'-'.mt_rand(100000, 999999).'-'.mt_rand(100000, 999999).'-'.mt_rand(100000, 999999),
-			'', 'no' );
-
 
 		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
 		add_action( 'admin_init', array( $this, 'page_init' ) );
@@ -111,10 +109,11 @@ class CalJSettingsPage
 	{
 		// Make sure ThickBox is loaded
 		add_thickbox();
-
+	
 		$hashing = md5(get_option('wpcjseed'));
-		$cacheBuster = mt_rand();
+		$cacheBuster = wp_rand();
 		$siteUrl = urlencode(get_option('siteurl'));
+		$nonce = wp_nonce_field( 'save-obtained-key', 'calj-nonce' );
 
 		print '<a href="'.esc_attr('https://www.calj.net/api/wp-obtain.html?_='.$cacheBuster.'&hashing='.$hashing.'&siteurl='.$siteUrl.
 			'&TB_iframe=true&width=600&height=550" title="CalJ API Key" class="thickbox button button-primary button-calj-obtain-key').'" target="_blank">Obtain a Key</a>';
@@ -124,7 +123,7 @@ class CalJSettingsPage
 for the registered key to work. If you register a key for a test/staging website URL, the key will
 only work for that Referrer. You may register different keys if you have more than one environment.</div>";
 
-		print <<<'ENDSCRIPT'
+		?>
 <script>
 jQuery(function () {
 
@@ -137,7 +136,8 @@ jQuery(function () {
         type: "POST",
         data: {
           "calj-op": "save-obtained-key",
-          "calj-key": msg.data.caljApiKey
+          "calj-key": msg.data.caljApiKey,
+		  "calj-nonce": "$nonce",
         }
       });
     }
@@ -158,7 +158,6 @@ jQuery(function () {
   });
 
   jQuery(".button-calj-clear-chache-now").click(function () {
-    var $link = jQuery(this);
     jQuery.ajax({
       "type": "POST",
       "data": {
@@ -175,7 +174,7 @@ jQuery(function () {
   });
 });
 </script>
-ENDSCRIPT;
+<?php
 	}
 
 	/**
@@ -204,6 +203,12 @@ ENDSCRIPT;
 			'setting_section_id' // Section
 		);
 
+		// Register seed
+		add_option ( 'wpcjseed',
+		wp_rand(100000, 999999).'-'.wp_rand(100000, 999999).'-'.wp_rand(100000, 999999).
+		'-'.wp_rand(100000, 999999).'-'.wp_rand(100000, 999999).'-'.wp_rand(100000, 999999),
+		'', 'no' );
+		
 	}
 
 	/**
