@@ -17,7 +17,12 @@ class CalJSettingsPage
 	 */
 	public function __construct()
 	{
-		if(isset($_POST['calj-clear-cache']) && $_POST['calj-clear-cache']) {
+		if(isset($_POST['calj-clear-cache']) && (sanitize_text_field(wp_unslash($_POST['calj-clear-cache'])) == 1)) {
+			if ( ! isset( $_POST['calj-nonce'] ) || 
+				 ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['calj-nonce'])), 'calj-clear-cache' ) ) {
+				wp_die( 'Security check failed' );
+			}
+
 			if (!current_user_can('manage_options')) {
 				wp_send_json_error('Unauthorized', 403);
 				exit;
@@ -41,7 +46,7 @@ class CalJSettingsPage
 				exit;
 			}
 
-			$key = $_POST['calj-key'];
+			$key = sanitize_text_field(wp_unslash($_POST['calj-key'] ?? ''));
 			ob_end_clean();
 			$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
 			$this->options['api_key'] = $key;
@@ -86,7 +91,7 @@ class CalJSettingsPage
 	{
 		// Set class property
 		$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
-		$requestUri = wp_unslash($_SERVER['REQUEST_URI'] ?? '');
+		$requestUri = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
 		?>
 		<div class="wrap">
 			<h2>CalJ Settings
@@ -113,7 +118,8 @@ class CalJSettingsPage
 		$hashing = md5(get_option('wpcjseed'));
 		$cacheBuster = wp_rand();
 		$siteUrl = urlencode(get_option('siteurl'));
-		$nonce = wp_nonce_field( 'save-obtained-key', 'calj-nonce' );
+		$nonce_obtain_key = wp_nonce_field( 'save-obtained-key', 'calj-nonce' );
+		$nonce_clear_cache = wp_nonce_field( 'calj-clear-cache', 'calj-nonce' );
 
 		print '<a href="'.esc_attr('https://www.calj.net/api/wp-obtain.html?_='.$cacheBuster.'&hashing='.$hashing.'&siteurl='.$siteUrl.
 			'&TB_iframe=true&width=600&height=550" title="CalJ API Key" class="thickbox button button-primary button-calj-obtain-key').'" target="_blank">Obtain a Key</a>';
@@ -137,7 +143,7 @@ jQuery(function () {
         data: {
           "calj-op": "save-obtained-key",
           "calj-key": msg.data.caljApiKey,
-		  "calj-nonce": "$nonce",
+		  "calj-nonce": "$nonce_obtain_key",
         }
       });
     }
@@ -161,8 +167,9 @@ jQuery(function () {
     jQuery.ajax({
       "type": "POST",
       "data": {
-        "calj-clear-cache": 1
-      },
+        "calj-clear-cache": 1,
+		"calj-nonce": "$nonce_clear_cache",
+	},
       "success": function () {
         jQuery(".calj-ok-cache-cleared").css("visibility", "visible");
         setTimeout(function () {
