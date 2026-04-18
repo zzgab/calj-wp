@@ -87,13 +87,15 @@ class CalJPlugin
                     }
                 }
 
+                $timezone = $json['city']['tz'];
+
                 // dot notation to access the json properties
                 $jsonPath = preg_split('#\.#', $decodedAttr['val']);
                 $jsonCursor = $this->computeJsonPath($lang, $json, $jsonPath);
 
                 if (is_array($jsonCursor)) {
                     // If we get an array in response, it means that there are 7 items (1 per day of the week, starting Sun)
-                    $dow = date('N') % 7;
+                    $dow = (new \DateTime('now', new \DateTimezone($timezone)))->format('N') % 7;
                     if (array_key_exists($dow, $jsonCursor)) {
                         $result = $jsonCursor[$dow];
                     }
