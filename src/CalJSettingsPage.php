@@ -1,5 +1,6 @@
 <?php
 namespace calj\wordpress;
+if ( ! defined( 'ABSPATH' ) ) exit;
 
 use calj\wordpress\CalJPlugin;
 
@@ -16,7 +17,17 @@ class CalJSettingsPage
 	 */
 	public function __construct()
 	{
-		if(isset($_POST['calj-clear-cache']) && $_POST['calj-clear-cache']) {
+		if(isset($_POST['calj-clear-cache']) && (sanitize_text_field(wp_unslash($_POST['calj-clear-cache'])) == 1)) {
+			if ( ! isset( $_POST['calj-nonce'] ) || 
+				 ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['calj-nonce'])), 'calj-clear-cache' ) ) {
+				wp_die( 'Security check failed' );
+			}
+
+			if (!current_user_can('manage_options')) {
+				wp_send_json_error('Unauthorized', 403);
+				exit;
+			}
+
 			ob_end_clean();
 			add_option( CalJPlugin::SHABBAT_CACHE_OPTION, array(), '', 'no');
 			update_option( CalJPlugin::SHABBAT_CACHE_OPTION, array());
@@ -24,8 +35,18 @@ class CalJSettingsPage
 			exit;
 		}
 
-		if(isset($_POST['calj-op']) && ($_POST['calj-op'] == 'save-obtained-key')) {
-			$key = $_POST['calj-key'];
+		if(isset($_POST['calj-op']) && ($_POST['calj-op'] === 'save-obtained-key')) {
+			if ( ! isset( $_POST['calj-nonce'] ) || 
+				 ! wp_verify_nonce( sanitize_text_field(wp_unslash($_POST['calj-nonce'])), 'save-obtained-key' ) ) {
+				wp_die( 'Security check failed' );
+			}
+		
+			if (!current_user_can('manage_options')) {
+				wp_send_json_error('Unauthorized', 403);
+				exit;
+			}
+
+			$key = sanitize_text_field(wp_unslash($_POST['calj-key'] ?? ''));
 			ob_end_clean();
 			$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
 			$this->options['api_key'] = $key;
@@ -34,13 +55,6 @@ class CalJSettingsPage
 			echo json_encode(array('success' => true, 'calj-key' => $key));
 			exit;
 		}
-
-		// Register seed
-		add_option ( 'wpcjseed',
-			mt_rand(100000, 999999).'-'.mt_rand(100000, 999999).'-'.mt_rand(100000, 999999).
-			'-'.mt_rand(100000, 999999).'-'.mt_rand(100000, 999999).'-'.mt_rand(100000, 999999),
-			'', 'no' );
-
 
 		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
 		add_action( 'admin_init', array( $this, 'page_init' ) );
@@ -51,7 +65,7 @@ class CalJSettingsPage
 	public function pluginActionLinks($links, $file)
 	{
 		if (dirname(plugin_basename(__FILE__)) != dirname($file)) return $links;
-		$links[] = '<a href="options-general.php?page=calj-setting">' . __('Settings') . '</a>';
+		$links[] = '<a href="options-general.php?page=calj-setting">' . __('Settings', 'calj') . '</a>';
 		return $links;
 	}
 
@@ -77,10 +91,11 @@ class CalJSettingsPage
 	{
 		// Set class property
 		$this->options = get_option( CalJPlugin::CALJ_API_OPTION );
+		$requestUri = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'] ?? ''));
 		?>
 		<div class="wrap">
 			<h2>CalJ Settings
-				<a class="button-calj-clear-chache-now page-title-action" href="<?php echo $_SERVER['REQUEST_URI'];?>&clear-calj-cache=1">Clear Cache Now</a>
+				<a class="button-calj-clear-chache-now page-title-action" href="<?php echo esc_attr($requestUri);?>&clear-calj-cache=1">Clear Cache Now</a>
 				<span class="calj-ok-cache-cleared" style="color: #159E15; font-size: 12px; visibility: hidden;">OK - Cache Cleared.</span>
 			</h2>
 			<form method="post" action="options.php">
@@ -99,20 +114,22 @@ class CalJSettingsPage
 	{
 		// Make sure ThickBox is loaded
 		add_thickbox();
-
+	
 		$hashing = md5(get_option('wpcjseed'));
-		$cacheBuster = mt_rand();
+		$cacheBuster = wp_rand();
 		$siteUrl = urlencode(get_option('siteurl'));
+		$nonce_obtain_key = wp_nonce_field( 'save-obtained-key', 'calj-nonce' );
+		$nonce_clear_cache = wp_nonce_field( 'calj-clear-cache', 'calj-nonce' );
 
-		print '<a href="https://www.calj.net/api/wp-obtain.html?_='.$cacheBuster.'&hashing='.$hashing.'&siteurl='.$siteUrl.
-			'&TB_iframe=true&width=600&height=550" title="CalJ API Key" class="thickbox button button-primary button-calj-obtain-key" target="_blank">Obtain a Key</a>';
+		print '<a href="'.esc_attr('https://www.calj.net/api/wp-obtain.html?_='.$cacheBuster.'&hashing='.$hashing.'&siteurl='.$siteUrl.
+			'&TB_iframe=true&width=600&height=550" title="CalJ API Key" class="thickbox button button-primary button-calj-obtain-key').'" target="_blank">Obtain a Key</a>';
 
         print '<br>';
         print "<div>⚠️ NOTE: you must install the plugin on your target (final/production) WordPress instance (Website URL)
 for the registered key to work. If you register a key for a test/staging website URL, the key will
 only work for that Referrer. You may register different keys if you have more than one environment.</div>";
 
-		print <<<'ENDSCRIPT'
+		?>
 <script>
 jQuery(function () {
 
@@ -125,7 +142,8 @@ jQuery(function () {
         type: "POST",
         data: {
           "calj-op": "save-obtained-key",
-          "calj-key": msg.data.caljApiKey
+          "calj-key": msg.data.caljApiKey,
+		  "calj-nonce": "$nonce_obtain_key",
         }
       });
     }
@@ -146,12 +164,12 @@ jQuery(function () {
   });
 
   jQuery(".button-calj-clear-chache-now").click(function () {
-    var $link = jQuery(this);
     jQuery.ajax({
       "type": "POST",
       "data": {
-        "calj-clear-cache": 1
-      },
+        "calj-clear-cache": 1,
+		"calj-nonce": "$nonce_clear_cache",
+	},
       "success": function () {
         jQuery(".calj-ok-cache-cleared").css("visibility", "visible");
         setTimeout(function () {
@@ -163,7 +181,7 @@ jQuery(function () {
   });
 });
 </script>
-ENDSCRIPT;
+<?php
 	}
 
 	/**
@@ -192,6 +210,12 @@ ENDSCRIPT;
 			'setting_section_id' // Section
 		);
 
+		// Register seed
+		add_option ( 'wpcjseed',
+		wp_rand(100000, 999999).'-'.wp_rand(100000, 999999).'-'.wp_rand(100000, 999999).
+		'-'.wp_rand(100000, 999999).'-'.wp_rand(100000, 999999).'-'.wp_rand(100000, 999999),
+		'', 'no' );
+		
 	}
 
 	/**
@@ -211,7 +235,7 @@ ENDSCRIPT;
 	public function api_key_callback()
 	{
 		printf(
-			'<input type="text" size="60" id="calj_api_key" name="'.CalJPlugin::CALJ_API_OPTION.'[api_key]" value="%s" />',
+			'<input type="text" size="60" id="calj_api_key" name="'.esc_attr(CalJPlugin::CALJ_API_OPTION.'[api_key]').'" value="%s" />',
 			isset( $this->options['api_key'] ) ? esc_attr( $this->options['api_key']) : ''
 		);
 	}
